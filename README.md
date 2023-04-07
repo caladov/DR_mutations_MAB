@@ -1,5 +1,7 @@
 # Drug resitance mutation analysis in *Mycobacterium abscessus*
-____
+
+Data availability: https://www.ncbi.nlm.nih.gov/bioproject/319839
+Reference publication: Davidson RM, Hasan NA, Epperson LE, Benoit JB, Kammlade SM, Levin AR, Calado de Moura V, Hunkins J, Weakly N, Beagle S, Sagel SD, Martiniano SL, Salfinger M, Daley CL, Nick JA, Strong M. 2021. Population Genomics of Mycobacterium abscessus from U.S. Cystic Fibrosis Care Centers. Ann Am Thorac Soc 18:1960-1969.
 
 ## 1) Notebooks 
 - Jupyter notebook (Analysis_DR_mutations_MAB.ipynb) - contains the Python code used for the initial analyses. 
