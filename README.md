@@ -12,6 +12,8 @@ ____
 
 ### CSV files: 
 - MAB_atcc.csv - contains the label used for *M. abscessus* ATCC19977
-- rrs_confusion_matrix.csv -
-- rrl_confusion_matrix.csv - - confusion matrices generated during the initial analyses  
-- erm_confusion_matrix.csv -
+
+Confusion matrices generated during the initial analyses  
+- rrs_confusion_matrix.csv
+- rrl_confusion_matrix.csv
+- erm_confusion_matrix.csv
