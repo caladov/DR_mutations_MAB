@@ -1,0 +1,261 @@
+---
+title: "Analysis of Antimicrobial Resistance Mutations In M. abscessus"
+author: "Vinicius Calado"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Libraries
+```{r message=FALSE}
+library(tidyverse)
+library(readxl)
+library(epiR)
+library(ggtree)
+```
+
+## 1) Sensitivity and Specificity Calculations 
+```{r}
+rrs_matrix <- read.csv('rrs_confusion_matrix.csv')
+epi.tests(as.matrix(rrs_matrix[2:3]))
+```
+
+```{r}
+rrl_matrix <- read.csv('rrl_confusion_matrix.csv')
+epi.tests(as.matrix(rrl_matrix[2:3]))
+```
+
+```{r}
+erm_matrix = read.csv('erm_confusion_matrix.csv')
+epi.tests(as.matrix(erm_matrix[2:3]))
+```
+
+## 2) Phylogenetic Tree
+```{r message=FALSE}
+# Loading datasets 
+meta_data <- read_excel('MAB_dataset_clean.xlsx')
+mab_atcc <- read_csv('MAB_ATCC.csv')
+meta_data <- meta_data %>%  select(Isolate, Patient_ASID,
+                                   rrs_prediction, rrl_prediction, 
+                                   erm41_28, erm_prediction,
+                                   WGS_Identification, Clone)
+meta_data <- meta_data %>% filter(!duplicated(Patient_ASID) & 
+                                    WGS_Identification == 'MAB')
+meta_data <- meta_data %>% full_join(mab_atcc, by='Isolate')
+glimpse(meta_data)
+```
+### Data wrangling 
+```{r Message=FALSE}
+# Classifying dominant clones
+meta_data <- meta_data %>% filter(!duplicated(Patient_ASID))
+meta_data <- meta_data %>% mutate(Clone = case_when(
+  Clone == 'MAB.clone001' ~ 'DCC1', 
+  Clone == 'MAB.clone002' ~ 'DCC2', 
+  TRUE ~ 'Non-DCC'
+))
+
+# Changing lables for the tree
+meta_data <- meta_data %>% rename(rrs = rrs_prediction, 
+                                  rrl = rrl_prediction)
+meta_data <- meta_data %>% mutate(Clone=case_when(
+  Label == 'ATCC19977' ~ 'DCC1',
+  TRUE ~ Clone
+))
+meta_data <-meta_data %>% mutate(erm41_28 = case_when(
+  Label == 'ATCC19977' ~ 'T',
+  TRUE ~ erm41_28
+))
+meta_data <- meta_data %>% mutate(Genotype = case_when(
+  rrs == 'Not resistant' &
+    rrl == 'Not resistant' ~ 'rrs WT, rrl WT',
+  Label == 'ATCC19977' ~ 'rrs WT, rrl WT',
+  rrs == 'Resistant' & rrl == 'Not resistant' ~'rrs mutation, rrl WT',
+  rrs == 'Not resistant' & rrl == 'Resistant' ~ 'rrs WT, rrl mutation', 
+  rrs == 'Resistant' & rrl == 'Resistant' ~ 'rrs mutation, rrl mutation'
+))
+glimpse(meta_data)
+```
+
+### Visualization of the tree
+```{r}
+# Tree object
+tree <- read.tree('nj250.89_MAB_isolates_add_ref.snpsites_UNROOT.nwk')
+
+# Joining metadata with tree
+tree_meta <- ggtree(tree, layout = 'circular') %<+% meta_data
+
+# Dataframe with clone classifications
+clones <- as.data.frame(meta_data %>% select(Clone))
+rownames(clones) <- meta_data$Isolate
+head(clones)
+```
+
+#### Ribosomal RNA
+```{r Message=FALSE, Warning=FALSE}
+labeled_tree <- tree_meta +
+  geom_tippoint(aes(color = Genotype), size = 4) +
+  scale_color_manual(values=c('rrs WT, rrl WT' = 'dodgerblue',
+                              'rrs mutation, rrl WT' = 'gold2', 
+                              'rrs WT, rrl mutation' = 'red', 
+                              'rrs mutation, rrl mutation' = 'darkred'),
+                     name='Ribosomal RNA')  +
+  geom_tiplab(aes(label=Label), size = 4, hjust = -0.1)
+
+gheatmap(labeled_tree, data = clones, 
+         colnames = F,
+         offset = 20, width=.1) + 
+  scale_fill_viridis_d(option = 'G', name='Cluster')
+```
+
+#### erm(41) position 28 
+```{r Message=FALSE, Warining=FALSE}
+labeled_tree <- tree_meta +
+  geom_tippoint(aes(color = erm41_28), size = 4) +
+  scale_color_manual(values=c('C' = 'darkorange1', 'T' = 'dodgerblue'), 
+                     name='erm(41)') +
+  geom_tiplab(aes(label=Label), size = 4, hjust = -0.1) 
+
+gheatmap(labeled_tree, data = clones, 
+         colnames = F,
+         offset = 20, width=.1) + 
+  scale_fill_viridis_d(option = 'G', name='Cluster')
+```
+
+
+## 3.1) DR genotypes across different dominant clones and subspecies
+
+### Loading datasets
+```{r Message = FALSE}
+df <- read_excel('MAB_dataset_clean.xlsx')
+df <- df %>% select(Isolate, Patient_ASID, WGS_Identification, 
+                    rrs_prediction, rrl_prediction, 
+                    erm41_28, Clone) %>% filter(!(duplicated(Patient_ASID)))
+df <- df %>% mutate(dominant_clone = case_when(
+  Clone == 'MAB.clone001' | Clone == 'MAB.clone002' ~ 'DCC', 
+  TRUE ~ 'Non-DCC'))
+df <- df %>% mutate(ribosomal_RNA_mutation = case_when(
+  rrs_prediction == 'Resistant' | rrl_prediction == 'Resistant' ~ 'Yes', 
+  TRUE ~ 'No'))
+glimpse(df)
+```
+
+```{r}
+# Only M. abscessus susbsp. abscessus
+mab <- df %>% filter(WGS_Identification == 'MAB')
+glimpse(mab)
+```
+
+### 3.1) Dominant clones
+#### rrs
+```{r}
+dcc_rrs <- mab %>% 
+  group_by(dominant_clone, rrs_prediction) %>% count() %>% ungroup()
+dcc_rrs <- dcc_rrs %>%
+  pivot_wider(names_from = rrs_prediction,
+              values_from = n)
+dcc_rrs
+```
+
+```{r}
+fisher.test(dcc_rrs[2:3])
+```
+
+#### rrl
+```{r}
+dcc_rrl <- mab %>% 
+  group_by(dominant_clone, rrl_prediction) %>% count() %>% ungroup()
+dcc_rrl <- dcc_rrl %>%
+  pivot_wider(names_from = rrl_prediction,
+              values_from = n)
+dcc_rrl
+```
+
+```{r}
+fisher.test(dcc_rrl[2:3])
+```
+
+#### rrs and rrl
+```{r}
+dcc_rrna <- mab %>% 
+  group_by(dominant_clone, ribosomal_RNA_mutation) %>% count() %>% ungroup()
+dcc_rrna <- dcc_rrna %>%
+  pivot_wider(names_from = ribosomal_RNA_mutation,
+              values_from = n)
+dcc_rrna
+```
+
+```{r}
+fisher.test(dcc_rrna[2:3])
+```
+
+#### erm41
+```{r}
+dcc_erm <- mab %>% 
+  group_by(dominant_clone, erm41_28) %>% count() %>% ungroup()
+dcc_erm <- dcc_erm %>% 
+  pivot_wider(names_from = erm41_28,
+              values_from = n)
+dcc_erm <- dcc_erm %>% replace(is.na(dcc_erm), 0)
+dcc_erm
+```
+
+```{r}
+fisher.test(dcc_erm[2:3])
+```
+
+### 3.2) Subspecies 
+#### rrs
+```{r}
+subsp_rrs <- df %>% 
+  group_by(WGS_Identification, rrs_prediction) %>% count() %>% ungroup()
+subsp_rrs <- subsp_rrs %>% 
+  pivot_wider(names_from = rrs_prediction,
+              values_from = n)
+subsp_rrs <- subsp_rrs %>% replace(is.na(subsp_rrs), 0)
+subsp_rrs
+```
+
+```{r}
+fisher.test(subsp_rrs[2:3])
+```
+
+#### rrl 
+```{r}
+subsp_rrl <- df %>% 
+  group_by(WGS_Identification, rrl_prediction) %>% count() %>% ungroup()
+subsp_rrl <- subsp_rrl %>% 
+  pivot_wider(names_from = rrl_prediction,
+              values_from = n)
+subsp_rrl <- subsp_rrl %>% replace(is.na(subsp_rrl), 0)
+subsp_rrl
+```
+
+#### rrl 
+```{r}
+subsp_rrl <- df %>% 
+  group_by(WGS_Identification, rrl_prediction) %>% count() %>% ungroup()
+subsp_rrl <- subsp_rrl %>% 
+  pivot_wider(names_from = rrl_prediction,
+              values_from = n)
+subsp_rrl <- subsp_rrl %>% replace(is.na(subsp_rrl), 0)
+subsp_rrl
+```
+
+```{r}
+fisher.test(subsp_rrl[2:3])
+```
+
+#### rrs and rrl
+```{r}
+subsp_rrna <- df %>% 
+  group_by(WGS_Identification, ribosomal_RNA_mutation) %>% count() %>% ungroup()
+subsp_rrna <- subsp_rrna %>% 
+  pivot_wider(names_from = ribosomal_RNA_mutation,
+              values_from = n)
+subsp_rrna <- subsp_rrna %>% replace(is.na(subsp_rrna), 0)
+subsp_rrna
+```
+
+```{r}
+fisher.test(subsp_rrna[2:3])
+```
+
