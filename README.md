@@ -10,7 +10,7 @@ Data availability:
 
 ## 2) Datasets
 ### Excel files:
-- MAB_MIC_DR_mutations_DCC.xlsx - dataset with combined minimum inhibitory concentrations (MIC), drug resitance (DR), and dominant circulating clones (DCC) data for M. abscessus 
+- MAB_MIC_DR_mutations_DCC.xlsx - dataset with combined minimum inhibitory concentrations (MIC), drug resitance (DR), and dominant circulating clones (DCC) data for *M. abscessus* 
 - MAB_dataset_clean.xlsx - clean dataset exported from initial analyses using Python 
 
 ### CSV files: 
