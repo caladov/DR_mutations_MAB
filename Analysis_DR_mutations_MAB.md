@@ -221,10 +221,8 @@ gheatmap(labeled_tree, data = clones,
 ![](Analysis_DR_mutations_MAB_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
-ggsave('ribosomalRNA_mutations_tree.pdf', dpi=300)
+## ggsave('ribosomalRNA_mutations_tree.pdf', dpi=300)
 ```
-
-    ## Saving 7 x 5 in image
 
 #### erm(41) position 28
 
@@ -249,10 +247,8 @@ gheatmap(labeled_tree, data = clones,
 ![](Analysis_DR_mutations_MAB_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
-ggsave('erm41_mutations_tree.pdf', dpi=300)
+## ggsave('erm_mutations_tree.pdf', dpi=300)
 ```
-
-    ## Saving 7 x 5 in image
 
 ## 3.1) DR genotypes across different dominant clones and subspecies
 
