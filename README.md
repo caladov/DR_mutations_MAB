@@ -6,7 +6,7 @@ Data availability:
 
 ## 1) Notebooks 
 - Jupyter notebook (Analysis_DR_mutations_MAB.ipynb) - contains the Python code used for the initial analyses. 
-- R markdown (Analysis_DR_mutations.Rmd) - contains the R code used for the statistical analyses and for visualizing phylogenetic trees. It has a rendered version (Analysis_DR_mutations.md)
+- R markdown (Analysis_DR_mutations.md) - contains the R code used for the statistical analyses and for visualizing phylogenetic trees.
 
 ## 2) Datasets
 ### Excel files:

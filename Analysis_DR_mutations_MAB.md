@@ -1,7 +1,7 @@
 Analysis of Antimicrobial Resistance Mutations In M. abscessus
 ================
 Vinicius Calado
-2023-04-07
+2023-06-17
 
 ## Libraries
 
@@ -150,11 +150,11 @@ meta_data <-meta_data %>% mutate(erm41_28 = case_when(
 ))
 meta_data <- meta_data %>% mutate(Genotype = case_when(
   rrs == 'Not resistant' &
-    rrl == 'Not resistant' ~ 'rrs WT, rrl WT',
-  Label == 'ATCC19977' ~ 'rrs WT, rrl WT',
-  rrs == 'Resistant' & rrl == 'Not resistant' ~'rrs mutation, rrl WT',
-  rrs == 'Not resistant' & rrl == 'Resistant' ~ 'rrs WT, rrl mutation', 
-  rrs == 'Resistant' & rrl == 'Resistant' ~ 'rrs mutation, rrl mutation'
+    rrl == 'Not resistant' ~ 'rrs & rrl WT',
+  Label == 'ATCC19977' ~ 'rrs & rrl WT',
+  rrs == 'Resistant' & rrl == 'Not resistant' ~'rrs 1408 mutant, rrl WT',
+  rrs == 'Not resistant' & rrl == 'Resistant' ~ 'rrs WT, rrl 2059/2059 mutant', 
+  rrs == 'Resistant' & rrl == 'Resistant' ~ 'rrs 1408 mutant, rrl 2059/2059 mutant'
 ))
 glimpse(meta_data)
 ```
@@ -170,7 +170,7 @@ glimpse(meta_data)
     ## $ WGS_Identification <chr> "MAB", "MAB", "MAB", "MAB", "MAB", "MAB", "MAB", "M…
     ## $ Clone              <chr> "DCC1", "Non-DCC", "DCC1", "DCC2", "Non-DCC", "DCC1…
     ## $ Label              <chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
-    ## $ Genotype           <chr> "rrs WT, rrl WT", "rrs WT, rrl WT", "rrs WT, rrl WT…
+    ## $ Genotype           <chr> "rrs & rrl WT", "rrs & rrl WT", "rrs & rrl WT", "rr…
 
 ### Visualization of the tree
 
@@ -199,13 +199,13 @@ head(clones)
 
 ``` r
 labeled_tree <- tree_meta +
-  geom_tippoint(aes(color = Genotype), size = 4) +
-  scale_color_manual(values=c('rrs WT, rrl WT' = 'dodgerblue',
-                              'rrs mutation, rrl WT' = 'gold2', 
-                              'rrs WT, rrl mutation' = 'red', 
-                              'rrs mutation, rrl mutation' = 'darkred'),
-                     name='Ribosomal RNA')  +
-  geom_tiplab(aes(label=Label), size = 4, hjust = -0.1)
+  geom_tippoint(aes(color = Genotype), size = 2) +
+  scale_color_manual(values=c('rrs & rrl WT' = 'dodgerblue',
+                              'rrs 1408 mutant, rrl WT' = 'gold2', 
+                              'rrs WT, rrl 2059/2059 mutant' = 'red', 
+                              'rrs 1408 mutant, rrl 2059/2059 mutant' = 'darkred'),
+                     name='Ribosomal RNA genotypes')  +
+  geom_tiplab(aes(label=Label), size = 2, hjust = -0.1)
 
 gheatmap(labeled_tree, data = clones, 
          colnames = F,
@@ -213,22 +213,27 @@ gheatmap(labeled_tree, data = clones,
   scale_fill_viridis_d(option = 'G', name='Cluster')
 ```
 
-    ## Scale for 'y' is already present. Adding another scale for 'y', which will
-    ## replace the existing scale.
-
-    ## Scale for 'fill' is already present. Adding another scale for 'fill', which
-    ## will replace the existing scale.
+    ## Scale for y is already present.
+    ## Adding another scale for y, which will replace the existing scale.
+    ## Scale for fill is already present.
+    ## Adding another scale for fill, which will replace the existing scale.
 
 ![](Analysis_DR_mutations_MAB_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+ggsave('ribosomalRNA_mutations_tree.pdf', dpi=300)
+```
+
+    ## Saving 7 x 5 in image
 
 #### erm(41) position 28
 
 ``` r
 labeled_tree <- tree_meta +
-  geom_tippoint(aes(color = erm41_28), size = 4) +
+  geom_tippoint(aes(color = erm41_28), size = 2) +
   scale_color_manual(values=c('C' = 'darkorange1', 'T' = 'dodgerblue'), 
-                     name='erm(41)') +
-  geom_tiplab(aes(label=Label), size = 4, hjust = -0.1) 
+                     name='erm(41) genotype at position 28') +
+  geom_tiplab(aes(label=Label), size = 2, hjust = -0.1) 
 
 gheatmap(labeled_tree, data = clones, 
          colnames = F,
@@ -236,13 +241,18 @@ gheatmap(labeled_tree, data = clones,
   scale_fill_viridis_d(option = 'G', name='Cluster')
 ```
 
-    ## Scale for 'y' is already present. Adding another scale for 'y', which will
-    ## replace the existing scale.
-
-    ## Scale for 'fill' is already present. Adding another scale for 'fill', which
-    ## will replace the existing scale.
+    ## Scale for y is already present.
+    ## Adding another scale for y, which will replace the existing scale.
+    ## Scale for fill is already present.
+    ## Adding another scale for fill, which will replace the existing scale.
 
 ![](Analysis_DR_mutations_MAB_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+ggsave('erm41_mutations_tree.pdf', dpi=300)
+```
+
+    ## Saving 7 x 5 in image
 
 ## 3.1) DR genotypes across different dominant clones and subspecies
 
